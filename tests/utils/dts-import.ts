@@ -11,6 +11,52 @@ const {
   engine: { createTransferEngine },
 } = require('@strapi/data-transfer');
 
+const createSourceProvider = (filePath: string) =>
+  createLocalFileSourceProvider({
+    file: { path: filePath },
+    encryption: { enabled: false },
+    compression: { enabled: false },
+  });
+
+const createRemoteDestinationProvider = (
+  includedTypes: any[] = [],
+  configuration: RestoreConfiguration
+) => {
+  return createRemoteStrapiDestinationProvider({
+    url: new URL(`http://127.0.0.1:${process.env.PORT ?? 1337}/admin`),
+    auth: { type: 'token', token: CUSTOM_TRANSFER_TOKEN_ACCESS_KEY },
+    strategy: 'restore',
+    restore: {
+      assets: true,
+      entities: {
+        include: includedTypes,
+      },
+      configuration,
+    },
+  });
+};
+
+const createLocalDestinationProvider = (
+  strapiInstance: any,
+  includedTypes: any[] = [],
+  configuration: RestoreConfiguration
+) => {
+  return createLocalStrapiDestinationProvider({
+    async getStrapi() {
+      return strapiInstance;
+    },
+    autoDestroy: false,
+    strategy: 'restore',
+    restore: {
+      assets: true,
+      entities: {
+        include: includedTypes,
+      },
+      configuration,
+    },
+  });
+};
+
 interface RestoreConfiguration {
   coreStore: boolean;
 }
@@ -180,7 +226,7 @@ const importData = async () => {
 const isTestEnvironment =
   process.env.NODE_ENV === 'test' ||
   process.env.JEST_WORKER_ID !== undefined ||
-  typeof jest !== 'undefined';
+  typeof (global as any).jest !== 'undefined';
 
 const isDirectExecution =
   !isTestEnvironment &&
@@ -192,49 +238,3 @@ const isDirectExecution =
 if (isDirectExecution) {
   importData();
 }
-
-const createSourceProvider = (filePath: string) =>
-  createLocalFileSourceProvider({
-    file: { path: filePath },
-    encryption: { enabled: false },
-    compression: { enabled: false },
-  });
-
-const createRemoteDestinationProvider = (
-  includedTypes: any[] = [],
-  configuration: RestoreConfiguration
-) => {
-  return createRemoteStrapiDestinationProvider({
-    url: new URL(`http://127.0.0.1:${process.env.PORT ?? 1337}/admin`),
-    auth: { type: 'token', token: CUSTOM_TRANSFER_TOKEN_ACCESS_KEY },
-    strategy: 'restore',
-    restore: {
-      assets: true,
-      entities: {
-        include: includedTypes,
-      },
-      configuration,
-    },
-  });
-};
-
-const createLocalDestinationProvider = (
-  strapiInstance: any,
-  includedTypes: any[] = [],
-  configuration: RestoreConfiguration
-) => {
-  return createLocalStrapiDestinationProvider({
-    async getStrapi() {
-      return strapiInstance;
-    },
-    autoDestroy: false,
-    strategy: 'restore',
-    restore: {
-      assets: true,
-      entities: {
-        include: includedTypes,
-      },
-      configuration,
-    },
-  });
-};
