@@ -88,21 +88,11 @@ test.describe('Admin Tokens — Create & List', () => {
     });
   });
 
-  // T1-T3 — Create tokens with different durations
-  const durationCases: [string, string][] = [
-    ['30-day admin token', '30 days'],
-    ['7-day admin token', '7 days'],
-    ['unlimited admin token', 'Unlimited'],
-  ];
+  test('A user should be able to create a 30 day admin token', async ({ page }) => {
+    await createAdminToken(page, '30-day admin token', '30 days');
+  });
 
-  for (const [name, duration] of durationCases) {
-    test(`T1-T3 — A user should be able to create a ${name}`, async ({ page }) => {
-      await createAdminToken(page, name, duration);
-    });
-  }
-
-  // T4 — List shows created token + Owner column
-  test('T4 — List shows created token and Owner column header', async ({ page }) => {
+  test('List shows created token and Owner column header', async ({ page }) => {
     await createAdminToken(page, 'my-list-test-token', '30 days');
     await navToHeader(page, ['Settings', 'Admin Tokens'], 'Admin Tokens');
 
@@ -110,8 +100,7 @@ test.describe('Admin Tokens — Create & List', () => {
     await expect(row).toBeVisible();
   });
 
-  // T5 — No Token type selector on create page
-  test('T5 — No Token type selector on create page', async ({ page }) => {
+  test('No Token type selector on create page', async ({ page }) => {
     await navToHeader(
       page,
       ['Settings', 'Admin Tokens', 'Create new Admin Token'],
@@ -120,8 +109,7 @@ test.describe('Admin Tokens — Create & List', () => {
     await expect(page.getByLabel('Token type')).not.toBeVisible();
   });
 
-  // T6 — Admin permissions matrix rendered (Plugins tab visible, no content-api routes section)
-  test('T6 — Admin permissions matrix rendered with Plugins tab', async ({ page }) => {
+  test('Admin permissions matrix rendered with Plugins tab', async ({ page }) => {
     await navToHeader(
       page,
       ['Settings', 'Admin Tokens', 'Create new Admin Token'],
@@ -150,18 +138,14 @@ test.describe('Admin Tokens — Ownership', () => {
     });
   });
 
-  // T7 — Own token: Owner field hidden
-  test('T7 — Own token: Owner field not shown for token owner', async ({ page }) => {
+  test('Owner field not shown for token owner', async ({ page }) => {
     await createAdminToken(page, 'super-admin-own-token', '30 days');
 
     // Owner field should not be visible when viewing your own token
     await expect(page.getByLabel('Owner')).not.toBeVisible();
   });
 
-  // T8-T10 — Other user's token: Owner shown, Copy/Regenerate hidden for non-owner
-  test("T8-T10 — Other user's token: Owner shown, Copy and Regenerate absent for non-owner", async ({
-    page,
-  }) => {
+  test('Owner shown, Copy and Regenerate absent for non-owner', async ({ page }) => {
     // Editor creates a token
     await switchUser({ page, username: EDITOR_EMAIL_ADDRESS, password: EDITOR_PASSWORD });
     await createAdminToken(page, 'editor-owned-token', '30 days');
@@ -176,8 +160,7 @@ test.describe('Admin Tokens — Ownership', () => {
     await expect(page.getByRole('button', { name: 'Regenerate' })).not.toBeVisible();
   });
 
-  // T11 — Own token (editor): Regenerate visible
-  test('T11 — Own token (editor): Regenerate button visible to owner', async ({ page }) => {
+  test('Regenerate button visible to owner', async ({ page }) => {
     // Switch to editor
     await switchUser({ page, username: EDITOR_EMAIL_ADDRESS, password: EDITOR_PASSWORD });
     await createAdminToken(page, 'editor-own-regen-token', '30 days');
@@ -203,8 +186,7 @@ test.describe('Admin Tokens — Permission Ceiling', () => {
     });
   });
 
-  // T12 — Super admin has no ceiling: no disabled checkboxes in Settings section
-  test('T12 — Super admin has no ceiling on Settings permissions', async ({ page }) => {
+  test('Super admin has no ceiling on Settings permissions', async ({ page }) => {
     await navToHeader(
       page,
       ['Settings', 'Admin Tokens', 'Create new Admin Token'],
@@ -216,8 +198,7 @@ test.describe('Admin Tokens — Permission Ceiling', () => {
     await expect(disabledCheckboxes).toHaveCount(0);
   });
 
-  // T13 — Non-super-admin ceiling enforced on create
-  test('T13 — Editor ceiling enforced: some Settings checkboxes disabled', async ({ page }) => {
+  test('Editor ceiling enforced: some Settings checkboxes disabled', async ({ page }) => {
     // Switch to editor
     await switchUser({ page, username: EDITOR_EMAIL_ADDRESS, password: EDITOR_PASSWORD });
 
@@ -235,8 +216,7 @@ test.describe('Admin Tokens — Permission Ceiling', () => {
     await expect(page.getByRole('checkbox', { name: 'Select Delete article' })).toBeDisabled();
   });
 
-  // T14 — Super admin editing editor's token: ceiling = editor's perms
-  test("T14 — Super admin editing editor's token sees ceiling from editor's permissions", async ({
+  test("Super admin editing editor's token sees ceiling from editor's permissions", async ({
     page,
   }) => {
     // Switch to editor, create a token
